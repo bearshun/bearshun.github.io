@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Word + Excel 風サイト</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #121212;
+      color: #f1f1f1;
+    }
+
+    header {
+      background-color: #1f1f1f;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #444;
+    }
+
+    nav button {
+      background-color: #333;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 20px;
+      gap: 20px;
+    }
+
+    .word-area, .excel-area {
+      background-color: #1a1a1a;
+      border: 1px solid #333;
+      padding: 15px;
+      border-radius: 8px;
+      flex: 1 1 400px;
+    }
+
+    .toolbar button, .toolbar select, .toolbar input[type=color] {
+      background-color: #444;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      margin: 3px;
+      cursor: pointer;
+    }
+
+    .toolbar button:hover {
+      background-color: #666;
+    }
+
+    #editor {
+      border: 1px solid #444;
+      background-color: #121212;
+      padding: 10px;
+      height: 200px;
+      overflow: auto;
+      color: white;
+    }
+
+    .excel-area table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .excel-area th, .excel-area td {
+      border: 1px solid #444;
+      padding: 8px;
+      text-align: center;
+      background-color: #222;
+      color: white;
+    }
+
+    .excel-area th {
+      background-color: #2a2a2a;
+    }
+
+    .save-btn {
+      margin-top: 10px;
+      background-color: #2f2f2f;
+      padding: 6px 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Word + Excel 風サイト</h1>
+    <nav>
+      <button onclick="saveDoc()">📄 Word保存</button>
+      <button onclick="saveCSV()">📊 Excel保存</button>
+    </nav>
+  </header>
+
+  <div class="container">
+    <!-- Word風エディタ -->
+    <div class="word-area">
+      <h2>📝 Word風エディタ</h2>
+      <div class="toolbar">
+        <button onclick="exec('bold')"><b>B</b></button>
+        <button onclick="exec('italic')"><i>I</i></button>
+        <button onclick="exec('underline')"><u>U</u></button>
+        <input type="color" onchange="execColor('foreColor', this.value)" title="文字色"/>
+        <input type="color" onchange="execColor('hiliteColor', this.value)" title="ハイライト"/>
+      </div>
+      <div id="editor" contenteditable="true">ここに文章を入力...</div>
+    </div>
+
+    <!-- Excel風エリア -->
+    <div class="excel-area">
+      <h2>📊 Excel風テーブル</h2>
+      <table id="excelTable">
+        <thead>
+          <tr>
+            <th>項目</th>
+            <th>数量</th>
+            <th>単価</th>
+            <th>合計</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td contenteditable="true">りんご</td>
+            <td contenteditable="true" oninput="recalculate()">5</td>
+            <td contenteditable="true" oninput="recalculate()">100</td>
+            <td class="sum">500</td>
+          </tr>
+          <tr>
+            <td contenteditable="true">みかん</td>
+            <td contenteditable="true" oninput="recalculate()">3</td>
+            <td contenteditable="true" oninput="recalculate()">80</td>
+            <td class="sum">240</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    function exec(cmd) {
+      document.execCommand(cmd, false, null);
+    }
+
+    function execColor(cmd, color) {
+      document.execCommand(cmd, false, color);
+    }
+
+    function recalculate() {
+      const table = document.querySelector("#excelTable tbody");
+      for (let row of table.rows) {
+        const qty = parseFloat(row.cells[1].textContent) || 0;
+        const price = parseFloat(row.cells[2].textContent) || 0;
+        row.cells[3].textContent = qty * price;
+      }
+    }
+
+    function saveDoc() {
+      const content = document.getElementById("editor").innerHTML;
+      const blob = new Blob([`<html><body>${content}</body></html>`], { type: "application/msword" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "word風文書.doc";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function saveCSV() {
+      const rows = document.querySelectorAll("#excelTable tr");
+      let csv = [];
+      for (let row of rows) {
+        let cols = row.querySelectorAll("td, th");
+        let rowData = Array.from(cols).map(col => `"${col.textContent.trim()}"`);
+        csv.push(rowData.join(","));
+      }
+      const blob = new Blob([csv.join("
+")], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "excel風表.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // 初期計算
+    window.onload = recalculate;
+  </script>
+</body>
+</html>
