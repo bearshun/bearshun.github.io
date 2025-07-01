@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>TurboWarp Player</title>
+  <script src="https://unpkg.com/@turbowarp/packager/player.js"></script>
+  <style>html,body{margin:0;padding:0;height:100%;}canvas{display:block;}</style>
+</head>
+<body>
+  <script>
+    const vm = new window.TurboWarp.Player();
+    document.body.appendChild(vm.canvas);
+    vm.start();
+
+    window.addEventListener("message", async event => {
+      if (event.data.type === "loadProject") {
+        const response = await fetch(event.data.url);
+        const arrayBuffer = await response.arrayBuffer();
+        vm.loadProject(arrayBuffer);
+      }
+    });
+  </script>
+</body>
+</html>

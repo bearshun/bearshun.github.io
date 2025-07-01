@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Scratch Offline Viewer</title>
+  <style>
+    body { margin: 0; background-color: #000; color: white; font-family: sans-serif; text-align: center; }
+    #player { width: 100%; height: 80vh; border: none; }
+    #dropzone { border: 2px dashed #888; padding: 1em; margin: 1em; }
+  </style>
+</head>
+<body>
+  <h1>Scratch Offline Viewer</h1>
+  <div id="dropzone">ここに.sb3ファイルをドラッグ＆ドロップ</div>
+  <iframe id="player" src="player.html"></iframe>
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const iframe = document.getElementById('player');
+    dropzone.ondragover = e => { e.preventDefault(); dropzone.style.borderColor = "#0f0"; };
+    dropzone.ondragleave = () => dropzone.style.borderColor = "#888";
+    dropzone.ondrop = e => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.endsWith(".sb3")) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          const blob = new Blob([evt.target.result]);
+          const url = URL.createObjectURL(blob);
+          iframe.contentWindow.postMessage({ type: 'loadProject', url }, '*');
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        alert("sb3ファイルをドロップしてください。");
+      }
+    };
+  </script>
+</body>
+</html>
